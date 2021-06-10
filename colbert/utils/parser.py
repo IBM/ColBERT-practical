@@ -37,7 +37,15 @@ class Arguments():
         self.add_argument('--checkpoint', dest='checkpoint', default=None, required=False)
 
         self.add_argument('--lr', dest='lr', default=3e-06, type=float)
-        self.add_argument('--maxsteps', dest='maxsteps', default=400000, type=int)
+        self.add_argument('--maxsteps', dest='maxsteps', default=400000, type=int,
+                          help="Training will end at the earlier of the specified epochs or maxsteps.")
+        self.add_argument('--save_steps', dest='save_steps', default=2000, type=int,
+                          help="Training will save checkpoint at the specified steps. "
+                               "Overridden by save_epochs.")
+        self.add_argument('--save_epochs', dest='save_epochs', default=-1, type=float,
+                          help="Training will save checkpoint at the specified epochs. Overrides save_steps.")
+        self.add_argument('--epochs', dest='epochs', default=10, type=int,
+                          help="Training will end at the earlier of the specified epochs or maxsteps.")
         self.add_argument('--bsize', dest='bsize', default=32, type=int)
         self.add_argument('--accum', dest='accumsteps', default=2, type=int)
         self.add_argument('--amp', dest='amp', default=False, action='store_true')

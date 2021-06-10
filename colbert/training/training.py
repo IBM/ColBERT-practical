@@ -1,4 +1,5 @@
 import os
+import math
 import random
 import time
 import torch
@@ -10,7 +11,8 @@ from colbert.utils.runs import Run
 from colbert.utils.amp import MixedPrecisionManager
 
 from colbert.training.lazy_batcher import LazyBatcher
-from colbert.training.eager_batcher import EagerBatcher
+#from colbert.training.eager_batcher import EagerBatcher
+from colbert.training.eager_batcher_2 import EagerBatcher
 from colbert.parameters import DEVICE
 
 from colbert.modeling.colbert import ColBERT
@@ -88,16 +90,27 @@ def train(args):
 
         reader.skip_to_batch(start_batch_idx, checkpoint['arguments']['bsize'])
 
-    for batch_idx, BatchSteps in zip(range(start_batch_idx, args.maxsteps), reader):
+    maxsteps = min(args.maxsteps, math.ceil((args.epochs * len(reader)) / (args.bsize * args.nranks)))
+    Run.info("maxsteps: {}".format(args.maxsteps))
+    Run.info("{} epochs of {} examples".format(args.epochs, len(reader)))
+    Run.info("batch size: {}".format(args.bsize))
+    Run.info("maxsteps set to {}".format(maxsteps))
+    print_every_step = False
+    for batch_idx, BatchSteps in zip(range(start_batch_idx, maxsteps), reader):
+        n_instances = batch_idx * args.bsize * args.nranks
+        if n_instances % len(reader) < args.bsize * args.nranks:
+            Run.info("====== Epoch {}...".format(n_instances // len(reader)))
+        # Run.info("Batch {}".format(batch_idx))
+        if batch_idx % 100 == 0:
+            Run.info("Batch {}".format(batch_idx))
         this_batch_loss = 0.0
-
         for queries, passages in BatchSteps:
             with amp.context():
                 scores = colbert(queries, passages).view(2, -1).permute(1, 0)
                 loss = criterion(scores, labels[:scores.size(0)])
                 loss = loss / args.accumsteps
 
-            if args.rank < 1:
+            if args.rank < 1 and print_every_step:
                 print_progress(scores)
 
             amp.backward(loss)
@@ -119,5 +132,7 @@ def train(args):
             Run.log_metric('train/examples', num_examples_seen, step=batch_idx, log_to_mlflow=log_to_mlflow)
             Run.log_metric('train/throughput', num_examples_seen / elapsed, step=batch_idx, log_to_mlflow=log_to_mlflow)
 
-            print_message(batch_idx, avg_loss)
-            manage_checkpoints(args, colbert, optimizer, batch_idx+1)
+            # print_message(batch_idx, avg_loss)
+            num_per_epoch = len(reader)
+            epoch_idx = ((batch_idx+1) * args.bsize * args.nranks) // num_per_epoch - 1
+            manage_checkpoints(args, colbert, optimizer, batch_idx+1, num_per_epoch, epoch_idx)

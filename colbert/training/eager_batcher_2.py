@@ -9,7 +9,7 @@ from colbert.modeling.tokenization import QueryTokenizer, DocTokenizer, tensoriz
 from colbert.utils.runs import Run
 
 
-class LazyBatcher():
+class EagerBatcher():
     def __init__(self, args, rank=0, nranks=1):
         self.rank, self.nranks = rank, nranks
         self.bsize, self.accumsteps = args.bsize, args.accumsteps
@@ -23,8 +23,6 @@ class LazyBatcher():
         random.shuffle(self.triples)
         self.reader = open(args.triples, mode='r', encoding="utf-8")
         self.length = len(self.reader.readlines())
-        self.queries = self._load_queries(args.queries)
-        self.collection = self._load_collection(args.collection)
 
     def _load_triples(self, path, rank, nranks):
         """
@@ -41,38 +39,10 @@ class LazyBatcher():
             for line_idx, line in enumerate(f):
                 if line_idx % nranks == rank:
                     # qid, pos, neg = ujson.loads(line)
-                    qid, pos, neg = line.strip().split('\t')
-                    triples.append((int(qid), int(pos), int(neg)))
+                    query, pos, neg = line.strip().split('\t')
+                    triples.append((query, pos, neg))
 
         return triples
-
-    def _load_queries(self, path):
-        print_message("#> Loading queries...")
-
-        queries = {}
-
-        with open(path) as f:
-            for line in f:
-                qid, query = line.strip().split('\t')
-                qid = int(qid)
-                queries[qid] = query
-
-        return queries
-
-    def _load_collection(self, path):
-        print_message("#> Loading collection...")
-
-        collection = []
-
-        with open(path) as f:
-            for line_idx, line in enumerate(f):
-                pid, passage, title, *_ = line.strip().split('\t')
-                assert pid == 'id' or int(pid) == line_idx
-
-                passage = title + ' | ' + passage
-                collection.append(passage)
-
-        return collection
 
     def __iter__(self):
         return self
@@ -89,14 +59,16 @@ class LazyBatcher():
 
             real_line_idx = (self.position + line_idx) % len(self.triples)
             query, pos, neg = self.triples[real_line_idx]
-            query, pos, neg = self.queries[query], self.collection[pos], self.collection[neg]
+            # query, pos, neg = self.queries[query], self.collection[pos], self.collection[neg]
 
             queries.append(query)
             positives.append(pos)
             negatives.append(neg)
-            # self.position += 1
 
         self.position += line_idx + 1
+
+        # if len(queries) < self.bsize:
+        #     raise StopIteration
 
         Run.info("Queries: {}  rank: {}".format(queries, self.rank))
 
