@@ -20,9 +20,13 @@ class EagerBatcher():
         self.position = 0
 
         self.triples = self._load_triples(args.triples, rank, nranks)
-        random.shuffle(self.triples)
+        # self.shuffle()
         self.reader = open(args.triples, mode='r', encoding="utf-8")
         self.length = len(self.reader.readlines())
+
+    def shuffle(self):
+        print_message("#> Shuffling triples...")
+        random.shuffle(self.triples)
 
     def _load_triples(self, path, rank, nranks):
         """

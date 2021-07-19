@@ -20,11 +20,15 @@ class LazyBatcher():
         self.position = 0
 
         self.triples = self._load_triples(args.triples, rank, nranks)
-        random.shuffle(self.triples)
+        # self.shuffle()
         self.reader = open(args.triples, mode='r', encoding="utf-8")
         self.length = len(self.reader.readlines())
         self.queries = self._load_queries(args.queries)
         self.collection = self._load_collection(args.collection)
+
+    def shuffle(self):
+        print_message("#> Shuffling triples...")
+        random.shuffle(self.triples)
 
     def _load_triples(self, path, rank, nranks):
         """

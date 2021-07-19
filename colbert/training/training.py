@@ -98,8 +98,9 @@ def train(args):
     print_every_step = False
     for batch_idx, BatchSteps in zip(range(start_batch_idx, maxsteps), reader):
         n_instances = batch_idx * args.bsize * args.nranks
-        if n_instances % len(reader) < args.bsize * args.nranks:
-            Run.info("====== Epoch {}...".format(n_instances // len(reader)))
+        if (n_instances + 1) % len(reader) < args.bsize * args.nranks:
+            Run.info("====== Epoch {}...".format((n_instances+1) // len(reader)))
+            reader.shuffle()
         # Run.info("Batch {}".format(batch_idx))
         if batch_idx % 100 == 0:
             Run.info("Batch {}".format(batch_idx))
