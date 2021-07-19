@@ -18,6 +18,7 @@ def main():
     parser.add_model_inference_parameters()
     parser.add_reranking_input()
     parser.add_index_use_input()
+    parser.add_write_ranking_result_input()
 
     parser.add_argument('--step', dest='step', default=1, type=int)
     parser.add_argument('--part-range', dest='part_range', default=None, type=str)

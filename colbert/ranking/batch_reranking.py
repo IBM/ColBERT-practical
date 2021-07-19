@@ -10,7 +10,7 @@ from colbert.utils.runs import Run
 from colbert.modeling.inference import ModelInference
 from colbert.evaluation.ranking_logger import RankingLogger
 
-from colbert.utils.utils import print_message, flatten, zipstar
+from colbert.utils.utils import print_message, flatten, zipstar, read_titles
 from colbert.indexing.loaders import get_parts
 from colbert.ranking.index_part import IndexPart
 
@@ -100,8 +100,16 @@ def batch_rerank(args):
         score_by_range(positions, loaded_parts, all_query_embeddings, all_query_rankings, all_pids)
 
     ranking_logger = RankingLogger(Run.path, qrels=None, log_scores=args.log_scores)
+    titles = None
+    if args.titles:
+        titles = read_titles(args.titles)
 
-    with ranking_logger.context('ranking.tsv', also_save_annotations=False) as rlogger:
+    with ranking_logger.context('ranking.tsv',
+                                also_save_annotations=False,
+                                also_save_json=True,
+                                ) as rlogger:
+        queries = args.queries
+
         with torch.no_grad():
             for query_index, qid in enumerate(queries):
                 if query_index % 1000 == 0:
@@ -121,11 +129,17 @@ def batch_rerank(args):
 
                 ranking = [(score, pid, None) for pid, score in zip(pids, scores)]
                 assert len(ranking) <= MAX_DEPTH_LOGGED, (len(ranking), MAX_DEPTH_LOGGED)
+                ranking = ranking[:args.top_n]
 
-                rlogger.log(qid, ranking, is_ranked=True, print_positions=[1, 2] if query_index % 100 == 0 else [])
+                rlogger.log(qid, ranking, is_ranked=True,
+                            print_positions=[1, 2] if query_index % 100 == 0 else [],
+                            queries=queries, titles=titles)
+
+        rlogger.log_json()
 
     print('\n\n')
     print(ranking_logger.filename)
+    print(ranking_logger.filename + ".json\n")
     print_message('#> Done.\n')
 
     thread.join()

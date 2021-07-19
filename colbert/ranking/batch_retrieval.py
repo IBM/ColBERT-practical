@@ -9,7 +9,7 @@ from multiprocessing import Pool
 from colbert.modeling.inference import ModelInference
 from colbert.evaluation.ranking_logger import RankingLogger
 
-from colbert.utils.utils import print_message, batch
+from colbert.utils.utils import print_message, batch, read_titles
 from colbert.ranking.faiss_index import FaissIndex
 
 
@@ -20,8 +20,14 @@ def batch_retrieve(args):
     inference = ModelInference(args.colbert, amp=args.amp)
 
     ranking_logger = RankingLogger(Run.path, qrels=None)
+    titles = None
+    if args.titles:
+        titles = read_titles(args.titles)
 
-    with ranking_logger.context('unordered.tsv', also_save_annotations=False) as rlogger:
+    with ranking_logger.context('unordered.tsv',
+                                also_save_annotations=False,
+                                also_save_json=False,
+                                ) as rlogger:
         queries = args.queries
         qids_in_order = list(queries.keys())
 
@@ -42,7 +48,7 @@ def batch_retrieve(args):
                     print_message(f"#> Logging query #{query_idx} (qid {qid}) now...")
 
                 ranking = [(None, pid, None) for pid in ranking]
-                rlogger.log(qid, ranking, is_ranked=False)
+                rlogger.log(qid, ranking, is_ranked=False, queries=queries, titles=titles)
 
     print('\n\n')
     print(ranking_logger.filename)

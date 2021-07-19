@@ -241,6 +241,18 @@ def grouper(iterable, n, fillvalue=None):
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
+def read_titles(path):
+    titles = {}
+    with open(path, 'r') as fin:
+        idx = 0
+        for line in fin.readlines():
+            a = line.strip().split('\t')
+            assert len(a) == 2
+            titles[idx] = a[1]
+            idx += 1
+    return titles
+
+
 # see https://stackoverflow.com/a/45187287
 class NullContextManager(object):
     def __init__(self, dummy_resource=None):

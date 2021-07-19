@@ -66,7 +66,7 @@ This works directly with the data format of the [MS MARCO Passage Ranking](https
 
 Training requires a list of _<query, positive passage, negative passage>_ tab-separated triples.
 
-You can supply **full-text** triples, where each line is `query text \t positive passage text \t negative passage text`. Alternatively, you can supply the query and passage **IDs** as a JSONL file `[qid, pid+, pid-]` per line, in which case you should specify `--collection path/to/collection.tsv` and `--queries path/to/queries.train.tsv`.
+You can supply **full-text** triples, where each line is `query text \t positive passage text \t negative passage text`. Alternatively, you can supply the query and passage **IDs** `qid \t pid+ \t pid-`, in which case you should specify `--collection path/to/collection.tsv` and `--queries path/to/queries.train.tsv`.
 
 
 ```
@@ -107,7 +107,7 @@ Example command:
 ```
 CUDA_VISIBLE_DEVICES="0,1,2,3" OMP_NUM_THREADS=6 \
 python -m torch.distributed.launch --nproc_per_node=4 -m \
-colbert.index --amp --doc_maxlen 180 --mask-punctuation --bsize 256 \
+colbert.index --root /root/to/experiments/ --amp --doc_maxlen 180 --mask-punctuation --bsize 256 \
 --checkpoint /root/to/experiments/MSMARCO-psg/train.py/msmarco.psg.l2/checkpoints/colbert-200000.dnn \
 --collection /path/to/MSMARCO/collection.tsv \
 --index_root /root/to/indexes/ --index_name MSMARCO.L2.32x200k \

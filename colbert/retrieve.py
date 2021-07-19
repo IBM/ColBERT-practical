@@ -19,6 +19,7 @@ def main():
     parser.add_model_inference_parameters()
     parser.add_ranking_input()
     parser.add_retrieval_input()
+    parser.add_write_ranking_result_input()
 
     parser.add_argument('--faiss_name', dest='faiss_name', default=None, type=str)
     parser.add_argument('--faiss_depth', dest='faiss_depth', default=1024, type=int)

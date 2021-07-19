@@ -9,7 +9,7 @@ from multiprocessing import Pool
 from colbert.modeling.inference import ModelInference
 from colbert.evaluation.ranking_logger import RankingLogger
 
-from colbert.utils.utils import print_message, batch
+from colbert.utils.utils import print_message, batch, read_titles
 from colbert.ranking.rankers import Ranker
 
 
@@ -19,8 +19,14 @@ def rerank(args):
 
     ranking_logger = RankingLogger(Run.path, qrels=None)
     milliseconds = 0
+    titles = None
+    if args.titles:
+        titles = read_titles(args.titles)
 
-    with ranking_logger.context('ranking.tsv', also_save_annotations=False) as rlogger:
+    with ranking_logger.context('ranking.tsv',
+                                also_save_annotations=False,
+                                also_save_json=True,
+                                ) as rlogger:
         queries = args.queries
         qids_in_order = list(queries.keys())
 
@@ -53,9 +59,13 @@ def rerank(args):
                     print_message(f"#> Logging query #{query_idx} (qid {qid}) now...")
 
                 ranking = [(score, pid, None) for pid, score in ranking]
-                rlogger.log(qid, ranking, is_ranked=True)
+                ranking = ranking[:args.top_n]
+                rlogger.log(qid, ranking, is_ranked=True, queries=queries, titles=titles)
+
+        rlogger.log_json()
 
     print('\n\n')
     print(ranking_logger.filename)
+    print(ranking_logger.filename + ".json\n")
     print("#> Done.")
     print('\n\n')

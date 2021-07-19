@@ -72,6 +72,11 @@ class Arguments():
         self.add_argument('--collection', dest='collection', default=None)
         self.add_argument('--qrels', dest='qrels', default=None)
 
+    def add_write_ranking_result_input(self):
+        self.add_argument('--top_n', dest='output top_n retrieval/reranking result', default=10, type=int)
+        self.add_argument('--titles', dest='titles', required=False)
+        self.add_argument('--out_ranking_base', dest='out_ranking_base', default="ranking.tsv")
+
     def add_reranking_input(self):
         self.add_ranking_input()
         self.add_argument('--topk', dest='topK', required=True)
