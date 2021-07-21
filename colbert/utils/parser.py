@@ -22,6 +22,7 @@ class Arguments():
 
     def add_model_parameters(self):
         # Core Arguments
+        self.add_argument('--model_name', dest='model_name', default='bert-base-uncased')
         self.add_argument('--similarity', dest='similarity', default='cosine', choices=['cosine', 'l2'])
         self.add_argument('--dim', dest='dim', default=128, type=int)
         self.add_argument('--query_maxlen', dest='query_maxlen', default=32, type=int)

@@ -11,8 +11,8 @@ class ModelInference():
         assert colbert.training is False
 
         self.colbert = colbert
-        self.query_tokenizer = QueryTokenizer(colbert.query_maxlen)
-        self.doc_tokenizer = DocTokenizer(colbert.doc_maxlen)
+        self.query_tokenizer = QueryTokenizer(colbert.query_maxlen, colbert.name_or_path)
+        self.doc_tokenizer = DocTokenizer(colbert.doc_maxlen, colbert.name_or_path)
 
         self.amp_manager = MixedPrecisionManager(amp)
 

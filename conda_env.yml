@@ -13,5 +13,6 @@ dependencies:
     - mlflow
     - tensorboard
     - tqdm
-    - transformers==3.0.2
+#    - transformers==3.0.2
+    - transformers
     - ujson

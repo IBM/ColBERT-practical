@@ -6,12 +6,12 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from transformers import AdamW
+from transformers import AdamW, AutoConfig
 from colbert.utils.runs import Run
 from colbert.utils.amp import MixedPrecisionManager
 
 from colbert.training.lazy_batcher import LazyBatcher
-#from colbert.training.eager_batcher import EagerBatcher
+# from colbert.training.eager_batcher import EagerBatcher
 from colbert.training.eager_batcher_2 import EagerBatcher
 from colbert.parameters import DEVICE
 
@@ -42,12 +42,18 @@ def train(args):
     if args.rank not in [-1, 0]:
         torch.distributed.barrier()
 
-    colbert = ColBERT.from_pretrained('bert-base-uncased',
-                                      query_maxlen=args.query_maxlen,
-                                      doc_maxlen=args.doc_maxlen,
-                                      dim=args.dim,
-                                      similarity_metric=args.similarity,
-                                      mask_punctuation=args.mask_punctuation)
+    config = AutoConfig.from_pretrained(
+        pretrained_model_name_or_path=args.model_name,
+    )
+    colbert = ColBERT.from_pretrained(
+        pretrained_model_name_or_path=args.model_name,
+        config=config,
+        query_maxlen=args.query_maxlen,
+        doc_maxlen=args.doc_maxlen,
+        dim=args.dim,
+        similarity_metric=args.similarity,
+        mask_punctuation=args.mask_punctuation,
+    )
 
     if args.checkpoint is not None:
         assert args.resume_optimizer is False, "TODO: This would mean reload optimizer too."

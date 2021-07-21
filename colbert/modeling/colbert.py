@@ -2,11 +2,14 @@ import string
 import torch
 import torch.nn as nn
 
-from transformers import BertPreTrainedModel, BertModel, BertTokenizerFast
+from transformers import BertPreTrainedModel, BertModel, BertTokenizerFast, AutoModel, AutoTokenizer, PreTrainedModel
 from colbert.parameters import DEVICE
 
 
-class ColBERT(BertPreTrainedModel):
+class ColBERT(PreTrainedModel):
+    # from BertPretrainedModel, might be useful
+    _keys_to_ignore_on_load_missing = [r"position_ids"]
+
     def __init__(self, config, query_maxlen, doc_maxlen, mask_punctuation, dim=128, similarity_metric='cosine'):
 
         super(ColBERT, self).__init__(config)
@@ -20,29 +23,54 @@ class ColBERT(BertPreTrainedModel):
         self.skiplist = {}
 
         if self.mask_punctuation:
-            self.tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+            self.tokenizer = AutoTokenizer.from_pretrained(config.name_or_path)
             self.skiplist = {w: True
                              for symbol in string.punctuation
                              for w in [symbol, self.tokenizer.encode(symbol, add_special_tokens=False)[0]]}
 
-        self.bert = BertModel(config)
+        self.bert = None
+        self.roberta = None
+        self.encoder = None
+        if config.model_type == 'bert':
+            self.bert = AutoModel.from_config(config)
+            self.encoder = self.bert
+        elif config.model_type == 'roberta':
+            self.roberta = AutoModel.from_config(config)
+            self.encoder = self.roberta
         self.linear = nn.Linear(config.hidden_size, dim, bias=False)
 
-        self.init_weights()
+        # self._init_weights()
+
+    # from BertPretrainedModel
+    def _init_weights(self, module):
+        """Initialize the weights"""
+        if isinstance(module, nn.Linear):
+            # Slightly different from the TF version which uses truncated_normal for initialization
+            # cf https://github.com/pytorch/pytorch/pull/5617
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
 
     def forward(self, Q, D):
         return self.score(self.query(*Q), self.doc(*D))
 
     def query(self, input_ids, attention_mask):
         input_ids, attention_mask = input_ids.to(DEVICE), attention_mask.to(DEVICE)
-        Q = self.bert(input_ids, attention_mask=attention_mask)[0]
+        Q = self.encoder(input_ids, attention_mask=attention_mask)[0]
         Q = self.linear(Q)
 
         return torch.nn.functional.normalize(Q, p=2, dim=2)
 
     def doc(self, input_ids, attention_mask, keep_dims=True):
         input_ids, attention_mask = input_ids.to(DEVICE), attention_mask.to(DEVICE)
-        D = self.bert(input_ids, attention_mask=attention_mask)[0]
+        D = self.encoder(input_ids, attention_mask=attention_mask)[0]
         D = self.linear(D)
 
         mask = torch.tensor(self.mask(input_ids), device=DEVICE).unsqueeze(2).float()
