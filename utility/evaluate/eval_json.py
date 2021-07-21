@@ -38,8 +38,8 @@ def read_query_doc_ref_tsv(file_name):
     return questions, doc_ids
 
 
-def eval(ref_file, hyp_file, thres=THRES, sort=False):
-    if hyp_file.endswith(".json"):
+def eval(ref_file, hyp_file, ref_format='json', thres=THRES, sort=False):
+    if ref_format == "json":
         question_ref, doc_ids_ref = read_query_docs_json(ref_file, sort=sort)
     else:
         question_ref, doc_ids_ref = read_query_doc_ref_tsv(ref_file)
@@ -68,14 +68,22 @@ def eval(ref_file, hyp_file, thres=THRES, sort=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-hyp", type=str)
-    parser.add_argument("-ref", type=str)
+    parser.add_argument("-hyp", required=True, type=str)
+    parser.add_argument("-ref", required=False, type=str)
+    parser.add_argument("-ref_tsv", required=False, type=str)
 
     args = parser.parse_args()
+    if args.ref:
+        ref_file = args.ref
+        ref_format = 'json'
+    elif args.ref_tsv:
+        ref_file = args.ref_tsv
+        ref_format = 'tsv'
+    else:
+        assert args.ref or args.ref_tsv
     result_file = args.hyp
-    ref_file = args.ref
 
-    eval(ref_file=ref_file, hyp_file=result_file, sort=True)
+    eval(ref_file=ref_file, hyp_file=result_file, ref_format=ref_format, sort=True)
 
 
 if __name__ == "__main__":
