@@ -124,7 +124,8 @@ class CollectionEncoder():
 
             pid, passage, *other = line_parts
 
-            assert len(passage) >= 1
+            # get around intents with empty doc
+            # assert len(passage) >= 1
 
             if len(other) >= 1:
                 title, *_ = other

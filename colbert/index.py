@@ -25,7 +25,9 @@ def main():
 
     with Run.context():
         args.index_path = os.path.join(args.index_root, args.index_name)
-        assert not os.path.exists(args.index_path), args.index_path
+        # get around, later: add an arg to specify overwriting
+        assert args.index_path
+        # assert not os.path.exists(args.index_path), args.index_path
 
         distributed.barrier(args.rank)
 
