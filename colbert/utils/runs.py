@@ -18,7 +18,8 @@ class _RunManager():
         self.experiment = None
         self.path = None
         self.script = self._get_script_name()
-        self.name = self._generate_default_run_name()
+        # self.name = self._generate_default_run_name()
+        self.name = ''
         self.original_name = self.name
         self.exit_status = 'FINISHED'
 

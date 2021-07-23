@@ -37,6 +37,8 @@ class ColBERT(PreTrainedModel):
         elif config.model_type == 'roberta':
             self.roberta = AutoModel.from_config(config)
             self.encoder = self.roberta
+        else:
+            self.encoder = AutoModel.from_config(config)
         self.linear = nn.Linear(config.hidden_size, dim, bias=False)
 
         # self._init_weights()
