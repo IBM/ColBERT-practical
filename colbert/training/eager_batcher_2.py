@@ -74,7 +74,7 @@ class EagerBatcher():
         # if len(queries) < self.bsize:
         #     raise StopIteration
 
-        Run.info("Queries: {}  rank: {}".format(queries, self.rank))
+        # Run.info("Queries: {}  rank: {}".format(queries, self.rank))
 
         return self.collate(queries, positives, negatives)
 

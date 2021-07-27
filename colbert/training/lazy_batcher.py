@@ -104,7 +104,7 @@ class LazyBatcher():
 
         self.position += line_idx + 1
 
-        Run.info("Queries: {}  rank: {}".format(queries, self.rank))
+        # Run.info("Queries: {}  rank: {}".format(queries, self.rank))
 
         return self.collate(queries, positives, negatives)
 
