@@ -24,23 +24,23 @@ def manage_checkpoints(args, colbert, optimizer, batch_idx, num_per_epoch, epoch
 
     if args.save_epochs == -1:
         if batch_idx % args.save_steps == 0:
-            saved_name = prefix + ".epoch_{}_batch_{}.model".format(0, batch_idx)
+            saved_name = prefix + ".batch_{}.model".format(batch_idx)
             save_checkpoint(saved_name, epoch_idx, batch_idx, colbert, optimizer, arguments)
     else:
         if batch_idx * args.bsize * args.nranks % int(args.save_epochs * num_per_epoch) < args.bsize * args.nranks:
             if args.save_epochs.is_integer():
-                saved_name = prefix + ".epoch_{}_batch_{}.model".format(epoch_idx, 0)
+                saved_name = prefix + ".epoch_{}.model".format(epoch_idx)
             else:
                 saved_name = prefix + ".epoch_{}_batch_{}.model".format(epoch_idx, batch_idx)
 
             save_checkpoint(saved_name, epoch_idx, batch_idx, colbert, optimizer, arguments)
 
-    if batch_idx in SAVED_CHECKPOINTS:
-        name = prefix + ".epoch_{}_batch_{}.model".format(0, batch_idx)
+    if batch_idx in SAVED_CHECKPOINTS or batch_idx == args.maxsteps:
+        name = prefix + ".batch_{}.model".format(batch_idx)
         if not name == saved_name:
             save_checkpoint(name, epoch_idx, batch_idx, colbert, optimizer, arguments)
 
     if (batch_idx * args.bsize * args.nranks) % (args.epochs * num_per_epoch) < args.bsize * args.nranks:
-        name = prefix + ".epoch_{}_batch_{}.model".format(args.epochs - 1, 0)
+        name = prefix + ".epoch_{}.model".format(args.epochs - 1)
         if not name == saved_name:
             save_checkpoint(name, epoch_idx, batch_idx, colbert, optimizer, arguments)
