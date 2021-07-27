@@ -36,6 +36,7 @@ class Arguments():
         self.add_argument('--resume', dest='resume', default=False, action='store_true')
         self.add_argument('--resume_optimizer', dest='resume_optimizer', default=False, action='store_true')
         self.add_argument('--checkpoint', dest='checkpoint', default=None, required=False)
+        self.add_argument('--pretrained_model', dest='pretrained_model', default=None, required=False)
 
         self.add_argument('--lr', dest='lr', default=3e-06, type=float)
         self.add_argument('--maxsteps', dest='maxsteps', default=400000, type=int,

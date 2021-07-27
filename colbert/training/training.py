@@ -55,6 +55,18 @@ def train(args):
         mask_punctuation=args.mask_punctuation,
     )
 
+    if args.pretrained_model is not None:
+        pretrained_model = torch.load(args.pretrained_model, map_location='cpu')
+
+        if 'model_state_dict' in pretrained_model:
+            pretrained_model = pretrained_model['model_state_dict']
+
+        try:
+            colbert.load_state_dict(pretrained_model)
+        except:
+            print_message("[WARNING] Loading pretrained_model with strict=False")
+            colbert.load_state_dict(pretrained_model, strict=False)
+
     if args.checkpoint is not None:
         assert args.resume_optimizer is False, "TODO: This would mean reload optimizer too."
         print_message(f"#> Starting from checkpoint {args.checkpoint} -- but NOT the optimizer!")
