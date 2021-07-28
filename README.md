@@ -1,3 +1,31 @@
+# Notes for IBM repository
+
+This repository is built on https://github.com/stanford-futuredata/ColBERT. 
+
+### Highlights of code changes:
+
+* Flexible accommodation for various transformer models.
+  * Scope: automated support for various types of transformers without extra files added in code.
+  * Flexible and great extendability by using AutoModel, AutoConfig and AutoTokenizer from Transformers.
+
+* Important change to training module.
+  * Including:
+    * Fixed training loop logic and data loader/batcher.     
+    * Flexible shuffling when needed (e.g., each epoch).    
+    * Training and checkpoint saving by epochs or fraction of epochs. 
+  * Without this, training would be on fixed set, and by steps, manual computation would be needed to get number of steps based on data size and hyper-parameters.
+  * Essential for production where we need training for multiple epochs.
+
+* Extend to working on CPU.
+  * Essential for production.
+
+* Output json format predictions 
+  * For ease of reranking, evaluation and ensembling 
+
+---------------
+
+The README below is also adapted to reflect the above mentioned changes.
+
 # ColBERT
 
 ### ColBERT is a _fast_ and _accurate_ retrieval model, enabling scalable BERT-based search over large text collections in tens of milliseconds. 
@@ -79,6 +107,16 @@ colbert.train --amp --doc_maxlen 180 --mask-punctuation --bsize 32 --accum 1 \
 
 You can use one or more GPUs by modifying `CUDA_VISIBLE_DEVICES` and `--nproc_per_node`.
 
+Notes:
+* By default, `bert-base-uncased` is the base model of ColBERT encoder. Different transformer models from Huggingface model hub (https://huggingface.co/models) can be specified with `--model_name`. At the present, models in `bert`, `roberta` and `xlm-roberta` families are tested and supported. More model types to come.
+
+* You can train from a pretrained ColBERT model with `--checkpoint`. 
+Alternatively, you can train from a pretrained transformer-based model 
+(not necessarily ColBERT) with the same encoder layer name (for example, 'bert' or 'roberta') with `--pretrained_model`. 
+Please make sure `--model_name` is consistent with the checkpoint or pretrained model 
+you are pointing to.
+
+* Training can be specified to by epochs with `--epochs`. Saving checkpoints can be specified by `--save_epochs` or `--save_steps`.
 
 ## Validation
 
@@ -146,6 +184,8 @@ python -m colbert.retrieve \
 ```
 
 You may also want to re-rank a top-k set that you've retrieved before with ColBERT or with another model. For this, use `colbert.rerank` similarly and additionally pass `--topk`.
+
+`--top_n` specifies how many top retrieval results will be recorded in output result file. A tsv file in the format of "doc_id \t doc_title" could be specified by `--titles` for outputing a json format result file with titles and scores specified for the top_n list.
 
 If you have a large set of queries (or want to reduce memory usage), use **batch-mode** retrieval and/or re-ranking. This can be done by passing `--batch --only_retrieval` to `colbert.retrieve` and passing `--batch --log-scores` to colbert.rerank alongside `--topk` with the `unordered.tsv` output of this retrieval run.
 
