@@ -12,6 +12,7 @@ from colbert.evaluation.ranking_logger import RankingLogger
 
 from colbert.utils.utils import print_message, batch, read_titles
 from colbert.ranking.rankers import Ranker
+from colbert.parameters import DEVICE
 
 
 def retrieve(args):
@@ -37,13 +38,15 @@ def retrieve(args):
             rankings = []
 
             for query_idx, q in enumerate(qbatch_text):
-                torch.cuda.synchronize('cuda:0')
+                if DEVICE.type == 'cuda' and args.nranks > 1:
+                    torch.cuda.synchronize('cuda:0')
                 s = time.time()
 
                 Q = ranker.encode([q])
                 pids, scores = ranker.rank(Q)
 
-                torch.cuda.synchronize()
+                if DEVICE.type == 'cuda' and args.nranks > 1:
+                    torch.cuda.synchronize()
                 milliseconds += (time.time() - s) * 1000.0
 
                 if len(pids):

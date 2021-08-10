@@ -11,6 +11,7 @@ import queue
 from colbert.modeling.inference import ModelInference
 from colbert.evaluation.loaders import load_colbert
 from colbert.utils.utils import print_message
+from colbert.parameters import DEVICE
 
 from colbert.indexing.index_manager import IndexManager
 
@@ -50,7 +51,7 @@ class CollectionEncoder():
 
     def _load_model(self):
         self.colbert, self.checkpoint = load_colbert(self.args, do_print=(self.process_idx == 0))
-        self.colbert = self.colbert.cuda()
+        self.colbert = self.colbert.to(DEVICE)
         self.colbert.eval()
 
         self.inference = ModelInference(self.colbert, amp=self.args.amp)
