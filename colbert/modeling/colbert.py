@@ -8,6 +8,7 @@ from colbert.parameters import DEVICE
 
 class ColBERT(PreTrainedModel):
     # from BertPretrainedModel, might be useful
+    base_model_prefix = "colbert"
     _keys_to_ignore_on_load_missing = [r"position_ids", r"colbert_encoder"]
 
     def __init__(self, config, query_maxlen, doc_maxlen, mask_punctuation, dim=128, similarity_metric='cosine'):
