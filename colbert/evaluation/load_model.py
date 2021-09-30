@@ -15,6 +15,8 @@ def load_model(args, do_print=True):
     config = AutoConfig.from_pretrained(
         pretrained_model_name_or_path=args.model_name,
     )
+    if not config.name_or_path:
+        config.name_or_path = args.model_name
     colbert = ColBERT.from_pretrained(
         pretrained_model_name_or_path=args.model_name,
         config=config,
