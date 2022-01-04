@@ -27,7 +27,7 @@ def retrieve(args):
 
     with ranking_logger.context(args.out_ranking_base,
                                 also_save_annotations=False,
-                                also_save_json=True,
+                                also_save_json=args.output_json,
                                 ) as rlogger:
         queries = args.queries
         qids_in_order = list(queries.keys())
@@ -65,7 +65,8 @@ def retrieve(args):
                 ranking = ranking[:args.top_n]
                 rlogger.log(qid, ranking, is_ranked=True, queries=queries, titles=titles)
 
-        rlogger.log_json()
+        if args.output_json:
+            rlogger.log_json()
 
     print('\n\n')
     print(ranking_logger.filename)

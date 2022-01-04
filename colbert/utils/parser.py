@@ -77,6 +77,7 @@ class Arguments():
         self.add_argument('--top_n', dest='top_n', default=10, type=int)
         self.add_argument('--titles', dest='titles', required=False)
         self.add_argument('--out_ranking_base', dest='out_ranking_base', default="ranking.tsv")
+        self.add_argument('--output_json', dest='output_json', action='store_true')
 
     def add_reranking_input(self):
         self.add_ranking_input()
