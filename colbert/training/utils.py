@@ -12,7 +12,7 @@ def print_progress(scores):
     print("#>>>   ", positive_avg, negative_avg, '\t\t|\t\t', positive_avg - negative_avg)
 
 
-def manage_checkpoints(args, colbert, optimizer, batch_idx, num_per_epoch, epoch_idx=0):
+def manage_checkpoints(args, colbert, optimizer, batch_idx, num_per_epoch, epoch_idx=0, prefix=''):
     arguments = args.input_arguments.__dict__
 
     saved_name = ""
@@ -20,7 +20,7 @@ def manage_checkpoints(args, colbert, optimizer, batch_idx, num_per_epoch, epoch
 
     if not os.path.exists(path):
         os.mkdir(path)
-    prefix = os.path.join(path, "colbert.dnn")
+    prefix = os.path.join(path, "colbert.dnn" + prefix)
 
     if args.save_epochs == -1:
         if batch_idx % args.save_steps == 0:
