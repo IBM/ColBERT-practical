@@ -2,8 +2,6 @@ import os
 import math
 import random
 import time
-import glob
-import errno
 import torch
 import torch.nn as nn
 import numpy as np
@@ -20,22 +18,7 @@ from colbert.parameters import DEVICE
 from colbert.modeling.colbert import ColBERT
 from colbert.utils.utils import print_message
 from colbert.training.utils import print_progress, manage_checkpoints
-
-
-def rel_link_last_model(path):
-    name = os.path.join(path, "colbert-LAST.dnn")
-    list_of_files = glob.glob(f'{path}/*.model')
-    latest_file = max(list_of_files, key=os.path.getctime)
-    rel_path = os.path.relpath(latest_file, path)
-    Run.info(f"Make a sym link of {rel_path} to {name}")
-    try:
-        os.symlink(rel_path, name)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            os.remove(name)
-            os.symlink(rel_path, name)
-        else:
-            raise
+from utility.utilities import rel_link_last_file
 
 
 def train(args):
@@ -175,4 +158,5 @@ def train(args):
             epoch_idx = ((batch_idx+1) * args.bsize * args.nranks) // num_per_epoch - 1
             manage_checkpoints(args, colbert, optimizer, batch_idx+1, num_per_epoch, epoch_idx)
 
-    rel_link_last_model(path)
+    rel_link_last_file(path, "colbert-LAST.dnn", "*.model")
+
