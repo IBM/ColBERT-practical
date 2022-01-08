@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import sys
 import math
 import random
@@ -13,14 +12,13 @@ from colbert.utils.runs import Run
 from colbert.utils.amp import MixedPrecisionManager
 
 from colbert.training.lazy_batcher import LazyBatcher
-# from colbert.training.eager_batcher import EagerBatcher
 from colbert.training.eager_batcher_2 import EagerBatcher
 from colbert.parameters import DEVICE
 
 from colbert.modeling.colbert import ColBERT
 from colbert.utils.utils import print_message
 from colbert.training.utils import print_progress, manage_checkpoints
-from utility.utilities import rel_link_last_file
+from utility.utilities import rel_link_last_file, get_file_new_timestamp
 
 
 def train(args):
@@ -30,6 +28,7 @@ def train(args):
     if args.distributed:
         torch.cuda.manual_seed_all(12345)
 
+    start_time_0 = time.time()
     if args.distributed:
         assert args.bsize % args.nranks == 0, (args.bsize, args.nranks)
         assert args.accumsteps == 1
@@ -104,16 +103,8 @@ def train(args):
 
         start_batch_idx = 0
 
-        # wait for the triples to be produced
-        while not os.path.exists(args.triples):
-            Run.info("waiting for triples")
-            time.sleep(5)
         # make sure we load a new batch of triples for every round
-        triples_time = datetime.fromtimestamp(os.path.getmtime(args.triples)).strftime('%x %X')
-        while triples_time == prev_triples_time:
-            Run.info("waiting for newer batch of triples")
-            time.sleep(5)
-            triples_time = datetime.fromtimestamp(os.path.getmtime(args.triples)).strftime('%x %X')
+        triples_time = get_file_new_timestamp(args.triples, prev_triples_time)
         Run.info(f"Triples time: {triples_time} {args.triples}")
         prev_triples_time = triples_time
 
@@ -190,6 +181,8 @@ def train(args):
         Run.info(f"Time for this round: {elapsed} seconds")
         elapsed = float(time.time() - real_start_time)
         Run.info(f"Actual Time for this round: {elapsed} seconds")
-        if not avg_loss or (prev_round_avg_loss - avg_loss) / avg_loss < 1e-02:
-            break
-        prev_round_avg_loss = avg_loss
+        elapsed = float(time.time() - start_time_0)
+        Run.info(f"Total Time elapsed: {elapsed} seconds")
+        # if not avg_loss or (prev_round_avg_loss - avg_loss) / avg_loss < 1e-02:
+        #     break
+        # prev_round_avg_loss = avg_loss

@@ -2,7 +2,6 @@ import os
 import ujson
 import random
 import math
-from datetime import datetime
 import time
 from argparse import ArgumentParser
 
@@ -18,7 +17,7 @@ from colbert.indexing.loaders import load_doclens
 from colbert.evaluation.loaders import load_colbert, load_qrels, load_queries
 from colbert.ranking.retrieval import retrieve
 from colbert.ranking.batch_retrieval import batch_retrieve
-from utility.utilities import rel_link_last_file
+from utility.utilities import rel_link_last_file, get_file_new_timestamp
 
 
 def do_index(args):
@@ -154,6 +153,7 @@ def main():
 
     with Run.context():
         prev_model_time = "--"
+        start_time_0 = time.time()
         for idx_round in range(args.n_rounds):
 
             start_time = time.time()
@@ -173,11 +173,7 @@ def main():
             args.checkpoint = args.checkpoint_bak
 
             # make sure we load a new model for every round
-            model_time = datetime.fromtimestamp(os.path.getmtime(args.checkpoint)).strftime('%x %X')
-            while model_time == prev_model_time:
-                Run.info("waiting for a newer model")
-                time.sleep(5)
-                model_time = datetime.fromtimestamp(os.path.getmtime(args.checkpoint)).strftime('%x %X')
+            model_time = get_file_new_timestamp(args.checkpoint, prev_model_time)
             Run.info(f"Model time: {model_time} {args.checkpoint}")
             prev_model_time = model_time
 
@@ -207,6 +203,8 @@ def main():
             Run.info(f"Time for this round: {elapsed} seconds")
             elapsed = float(time.time() - real_start_time)
             Run.info(f"Actual Time for this round: {elapsed} seconds")
+            elapsed = float(time.time() - start_time_0)
+            Run.info(f"Total Time elapsed: {elapsed} seconds")
 
 
 if __name__ == "__main__":

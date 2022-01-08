@@ -1,6 +1,8 @@
 import glob
 import errno
 import os
+import time
+from datetime import datetime
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -21,5 +23,24 @@ def rel_link_last_file(path, link_basename, file_pattern):
             os.symlink(rel_path, name)
         else:
             raise
+
+
+def get_file_new_timestamp(path, prev_time="--"):
+    # will wait until getting a new timestamp for the file
+    while not os.path.exists(path):
+        logger.info(f"waiting for {path}")
+        time.sleep(0.5)
+    try:
+        new_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+    except FileNotFoundError:
+        new_time = prev_time
+    while new_time == prev_time:
+        logger.info("waiting for a newer model")
+        time.sleep(0.5)
+        try:
+            new_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+        except FileNotFoundError:
+            new_time = prev_time
+    return new_time
 
 
