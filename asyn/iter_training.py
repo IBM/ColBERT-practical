@@ -18,7 +18,7 @@ from colbert.parameters import DEVICE
 from colbert.modeling.colbert import ColBERT
 from colbert.utils.utils import print_message
 from colbert.training.utils import print_progress, manage_checkpoints
-from utility.utilities import rel_link_last_file, get_file_new_timestamp
+from utility.utilities import rel_link_last_file, get_file_new_link_and_timestamp
 
 
 def train(args):
@@ -104,8 +104,8 @@ def train(args):
         start_batch_idx = 0
 
         # make sure we load a new batch of triples for every round
-        triples_time = get_file_new_timestamp(args.triples, prev_triples_time)
-        Run.info(f"Triples time: {triples_time} {args.triples}")
+        triples_link, triples_time = get_file_new_link_and_timestamp(args.triples, prev_triples_time)
+        Run.info(f"Triples time: {triples_time} {triples_link}")
         prev_triples_time = triples_time
 
         real_start_time = time.time()
