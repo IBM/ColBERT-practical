@@ -25,13 +25,28 @@ def rel_link_last_file(path, link_basename, file_pattern):
             raise
 
 
-def get_file_new_timestamp(path, prev_time="--"):
+def get_link_and_timestamp(path):
+    while not os.path.exists(path):
+        logger.info(f"waiting for {path}")
+        time.sleep(0.5)
+    try:
+        timestamp = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+        link = os.readlink(path)
+    except FileNotFoundError:
+        time.sleep(0.01)
+        timestamp = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+        link = os.readlink(path)
+    return link, timestamp
+
+
+def get_file_new_link_and_timestamp(path, prev_time="--"):
     # will wait until getting a new timestamp for the file
     while not os.path.exists(path):
         logger.info(f"waiting for {path}")
         time.sleep(0.5)
     try:
         new_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+        link = os.readlink(path)
     except FileNotFoundError:
         new_time = prev_time
     while new_time == prev_time:
@@ -39,8 +54,9 @@ def get_file_new_timestamp(path, prev_time="--"):
         time.sleep(0.5)
         try:
             new_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')
+            link = os.readlink(path)
         except FileNotFoundError:
             new_time = prev_time
-    return new_time
+    return link, new_time
 
 

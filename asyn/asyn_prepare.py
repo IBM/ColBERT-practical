@@ -17,7 +17,7 @@ from colbert.indexing.loaders import load_doclens
 from colbert.evaluation.loaders import load_colbert, load_qrels, load_queries
 from colbert.ranking.retrieval import retrieve
 from colbert.ranking.batch_retrieval import batch_retrieve
-from utility.utilities import rel_link_last_file, get_file_new_timestamp
+from utility.utilities import rel_link_last_file, get_file_new_link_and_timestamp
 
 
 def do_index(args):
@@ -127,6 +127,11 @@ def get_params():
     parser.add_argument('--depth-', dest='depth_negative', required=True, type=int)
     parser.add_argument('--max_n_neg', dest='max_n_neg', required=False, default=100, type=int)
     parser.add_argument('--min_n_neg', dest='min_n_neg', required=False, default=3, type=int)
+    parser.add_argument('--sample_strategy', dest='sample_strategy', required=False,
+                        default='s1', type=str, choices=['s1', 's2'])
+    # args for strategy 2
+    parser.add_argument('--depth-e', dest='depth_easy_negative', required=False, default=1000, type=int)
+    parser.add_argument('--n_neg_hard', dest='n_neg_hard', required=False, default=100, type=int)
 
     args = parser.parse()
 
@@ -173,8 +178,8 @@ def main():
             args.checkpoint = args.checkpoint_bak
 
             # make sure we load a new model for every round
-            model_time = get_file_new_timestamp(args.checkpoint, prev_model_time)
-            Run.info(f"Model time: {model_time} {args.checkpoint}")
+            model_link, model_time = get_file_new_link_and_timestamp(args.checkpoint, prev_model_time)
+            Run.info(f"Model time: {model_time} {model_link}")
             prev_model_time = model_time
 
             real_start_time = time.time()

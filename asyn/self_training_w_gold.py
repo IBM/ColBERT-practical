@@ -12,7 +12,7 @@ from colbert.utils.utils import print_message
 MAX_NUM_TRIPLES = 40_000_000
 
 
-def sample_for_query(qid, ranking, positives, depth_negative, max_n_neg, min_n_neg):
+def sample_for_query_1(qid, ranking, positives, depth_negative, max_n_neg, min_n_neg):
     """
         Requires that the ranks are sorted per qid.
     """
@@ -22,13 +22,14 @@ def sample_for_query(qid, ranking, positives, depth_negative, max_n_neg, min_n_n
 
     for pid, rank, *_ in ranking:
         assert rank >= 1, f"ranks should start at 1 \t\t got rank = {rank}"
-        if rank > depth_negative:
-            break
         # stop if we ever see a positive because we only want to include super hard negatives
         if pid in positives:
             found_positive = True
             if rank == 1:
                 n_match += 1
+            continue
+        if rank > depth_negative:
+            # continue instead of break because we want to report n_match
             continue
         if found_positive and len(negatives) >= min_n_neg:
             break
@@ -37,6 +38,54 @@ def sample_for_query(qid, ranking, positives, depth_negative, max_n_neg, min_n_n
     if len(negatives) > max_n_neg:
         negatives = random.sample(negatives, max_n_neg)
     for neg in negatives:
+        for positive in positives:
+            triples.append((qid, positive, neg))
+
+    return triples, n_match
+
+
+def sample_for_query_2(
+        qid,
+        ranking,
+        positives,
+        depth_negative,
+        depth_easy_negative,
+        n_neg_hard,
+        min_n_neg,
+):
+    """
+        Requires that the ranks are sorted per qid.
+    """
+    triples = []
+    found_positive = False
+    n_match = 0
+
+    pids = [r[0] for r in ranking]
+    hard_negatives, easy_negatives = [], []
+    for pid, rank, *_ in ranking:
+        assert rank >= 1, f"ranks should start at 1 \t\t got rank = {rank}"
+        if pid in positives:
+            found_positive = True
+            if rank == 1:
+                n_match = 1
+            continue
+        if rank > depth_negative:
+            # continue instead of break because we want to report n_match
+            continue
+        if not found_positive:
+            hard_negatives.append(pid)
+        else:
+            if rank > depth_easy_negative:
+                break
+            easy_negatives.append(pid)
+    if len(hard_negatives) > n_neg_hard:
+        hard_negatives = random.sample(hard_negatives, n_neg_hard)
+    n_needed = max(0, min_n_neg - len(hard_negatives))
+    if n_needed:
+        easy_negatives = random.sample(easy_negatives, n_needed)
+    else:
+        easy_negatives = []
+    for neg in hard_negatives + easy_negatives:
         for positive in positives:
             triples.append((qid, positive, neg))
 
@@ -74,14 +123,26 @@ def get_self_guided_training_w_gold(args):
     n_match = 0
 
     for processing_idx, qid in enumerate(qid2rankings):
-        new_triples, new_n_match = sample_for_query(
-            qid,
-            qid2rankings[qid],
-            qid2positives[qid],
-            args.depth_negative,
-            args.max_n_neg,
-            args.min_n_neg,
-        )
+        if args.sample_strategy == 's1':
+            new_triples, new_n_match = sample_for_query_1(
+                qid,
+                qid2rankings[qid],
+                qid2positives[qid],
+                args.depth_negative,
+                args.max_n_neg,
+                args.min_n_neg,
+            )
+        elif args.sample_strategy == 's2':
+            new_triples, new_n_match = sample_for_query_2(
+                qid,
+                qid2rankings[qid],
+                qid2positives[qid],
+                args.depth_negative,
+                args.depth_easy_negative,
+                args.n_neg_hard,
+                args.min_n_neg,
+            )
+
         non_empty_qids += (len(new_triples) > 0)
         n_match += new_n_match
         triples.extend(new_triples)
