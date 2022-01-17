@@ -45,7 +45,7 @@ def save_checkpoint(path, epoch_idx, mb_idx, model, optimizer, arguments=None):
     checkpoint['epoch'] = epoch_idx
     checkpoint['batch'] = mb_idx
     checkpoint['model_state_dict'] = model.state_dict()
-    checkpoint['optimizer_state_dict'] = optimizer.state_dict()
+    # checkpoint['optimizer_state_dict'] = optimizer.state_dict()
     checkpoint['arguments'] = arguments
 
     torch.save(checkpoint, path)

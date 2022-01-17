@@ -50,7 +50,7 @@ def get_file_new_link_and_timestamp(path, prev_time="--"):
     except FileNotFoundError:
         new_time = prev_time
     while new_time == prev_time:
-        logger.info("waiting for a newer model")
+        logger.info(f"waiting for a newer file at {path}")
         time.sleep(0.5)
         try:
             new_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime('%x %X')

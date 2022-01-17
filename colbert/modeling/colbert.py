@@ -31,6 +31,8 @@ class ColBERT(PreTrainedModel):
 
         self.bert = None
         self.roberta = None
+        self.electra = None
+        self.distilbert = None
         self.colbert_encoder = None
         if config.model_type == 'bert':
             self.bert = AutoModel.from_config(config)
@@ -38,6 +40,12 @@ class ColBERT(PreTrainedModel):
         elif config.model_type in ['roberta', 'xlm-roberta']:
             self.roberta = AutoModel.from_config(config)
             self.colbert_encoder = self.roberta
+        elif config.model_type == 'electra':
+            self.electra = AutoModel.from_config(config)
+            self.colbert_encoder = self.electra
+        elif config.model_type == 'distilbert':
+            self.distilbert = AutoModel.from_config(config)
+            self.colbert_encoder = self.distilbert
         else:
             print("Please add lines to support this model type.")
             raise NotImplementedError
