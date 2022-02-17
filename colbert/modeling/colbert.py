@@ -9,7 +9,7 @@ from colbert.parameters import DEVICE
 class ColBERT(PreTrainedModel):
     # from BertPretrainedModel, might be useful
     base_model_prefix = "colbert"
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"colbert_encoder"]
+    _keys_to_ignore_on_load_missing = [r"position_ids", r"encoder_colbert"]
 
     def __init__(self, config, query_maxlen, doc_maxlen, mask_punctuation, dim=128, similarity_metric='cosine'):
 
@@ -31,13 +31,13 @@ class ColBERT(PreTrainedModel):
 
         self.bert = None
         self.roberta = None
-        self.colbert_encoder = None
+        self.encoder_colbert = None
         if config.model_type == 'bert':
             self.bert = AutoModel.from_config(config)
-            self.colbert_encoder = self.bert
+            self.encoder_colbert = self.bert
         elif config.model_type in ['roberta', 'xlm-roberta']:
             self.roberta = AutoModel.from_config(config)
-            self.colbert_encoder = self.roberta
+            self.encoder_colbert = self.roberta
         else:
             print("Please add lines to support this model type.")
             raise NotImplementedError
@@ -67,14 +67,23 @@ class ColBERT(PreTrainedModel):
 
     def query(self, input_ids, attention_mask):
         input_ids, attention_mask = input_ids.to(DEVICE), attention_mask.to(DEVICE)
-        Q = self.colbert_encoder(input_ids, attention_mask=attention_mask)[0]
+        Q = self.encoder_colbert(input_ids, attention_mask=attention_mask)[0]
         Q = self.linear(Q)
 
         return torch.nn.functional.normalize(Q, p=2, dim=2)
 
+    # def query_list(self, input_ids, attention_mask):
+    #     input_ids, attention_mask = input_ids.to(DEVICE), attention_mask.to(DEVICE)
+    #     Q = self.encoder_colbert(input_ids, attention_mask=attention_mask)[0]
+    #     Q = self.linear(Q)
+    #     Q = torch.nn.functional.normalize(Q, p=2, dim=2)
+    #     Q = Q.cpu().to(dtype=torch.float16)
+    #     # could consider trimming down later
+    #     return [q for idx, q in enumerate(Q)]
+    #
     def doc(self, input_ids, attention_mask, keep_dims=True):
         input_ids, attention_mask = input_ids.to(DEVICE), attention_mask.to(DEVICE)
-        D = self.colbert_encoder(input_ids, attention_mask=attention_mask)[0]
+        D = self.encoder_colbert(input_ids, attention_mask=attention_mask)[0]
         D = self.linear(D)
 
         mask = torch.tensor(self.mask(input_ids), device=DEVICE).unsqueeze(2).float()
