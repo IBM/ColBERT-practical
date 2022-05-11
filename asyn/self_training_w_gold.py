@@ -6,7 +6,6 @@ import random
 from collections import defaultdict
 
 from argparse import ArgumentParser
-from colbert.utils.utils import print_message
 
 
 MAX_NUM_TRIPLES = 40_000_000
@@ -148,16 +147,16 @@ def get_self_guided_training_w_gold(args):
         triples.extend(new_triples)
 
         if processing_idx % 10_000 == 0:
-            print_message(f"#> Done with {processing_idx+1} questions!\t\t "
+            print(f"#> Done with {processing_idx+1} questions!\t\t "
                           f"{str(len(triples) / 1000)}k triples for {non_empty_qids} unqiue QIDs.")
 
-    print_message(f"#> Sub-sample the triples (if > {MAX_NUM_TRIPLES})..")
-    print_message(f"#> len(triples) = {len(triples)}")
+    print(f"#> Sub-sample the triples (if > {MAX_NUM_TRIPLES})..")
+    print(f"#> len(triples) = {len(triples)}")
 
     if len(triples) > MAX_NUM_TRIPLES:
         triples = random.sample(triples, MAX_NUM_TRIPLES)
 
-    print_message("#> Writing {}M examples to file.".format(len(triples) / 1000.0 / 1000.0))
+    print("#> Writing {}M examples to file.".format(len(triples) / 1000.0 / 1000.0))
 
     with open(args.output, 'w') as f:
         for qid, pos, neg in triples:
@@ -167,7 +166,7 @@ def get_self_guided_training_w_gold(args):
     print(args.output)
     ratio_match = n_match / len(qid2rankings)
     print(f'match@1 = {ratio_match}')
-    print_message("#> Done.")
+    print("#> Done.")
 
 
 def main():
@@ -179,6 +178,7 @@ def main():
     parser.add_argument('--ranking', dest='ranking', required=True, type=str)
     parser.add_argument('--positive', dest='positive', required=True, type=str)
     parser.add_argument('--output', dest='output', required=True, type=str)
+    parser.add_argument('--sample_strategy', dest='sample_strategy', required=False, default='s1', type=str)
     parser.add_argument('--depth-', dest='depth_negative', required=True, type=int)
     parser.add_argument('--max_n_neg', dest='max_n_neg', required=False, default=100, type=int)
     parser.add_argument('--min_n_neg', dest='min_n_neg', required=False, default=3, type=int)
