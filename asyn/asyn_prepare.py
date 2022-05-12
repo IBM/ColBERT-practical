@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from colbert.utils.runs import Run
 from colbert.utils.parser import Arguments
 import colbert.utils.distributed as distributed
-from self_training_w_gold import get_self_guided_training_w_gold
+from asyn.self_training_w_gold import get_self_guided_training_w_gold
 
 from colbert.utils.utils import print_message, create_directory
 from colbert.indexing.encoder import CollectionEncoder

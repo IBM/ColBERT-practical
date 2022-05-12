@@ -25,7 +25,7 @@ from utility.utilities import (
 )
 
 
-def train(args):
+def train(args, dyn_stop=False):
     random.seed(12345)
     np.random.seed(12345)
     torch.manual_seed(12345)
@@ -185,6 +185,7 @@ def train(args):
         Run.info(f"Actual Time for this round: {elapsed} seconds")
         elapsed = float(time.time() - start_time_0)
         Run.info(f"Total Time elapsed: {elapsed} seconds")
-        # if not avg_loss or (prev_round_avg_loss - avg_loss) / avg_loss < 1e-02:
-        #     break
-        # prev_round_avg_loss = avg_loss
+        if dyn_stop:
+            if not avg_loss or (prev_round_avg_loss - avg_loss) / avg_loss < 1e-02:
+                break
+            prev_round_avg_loss = avg_loss

@@ -7,7 +7,7 @@ import colbert.utils.distributed as distributed
 
 from colbert.utils.parser import Arguments
 from colbert.utils.runs import Run
-from asyn_training import train
+from asyn.asyn_training import train
 
 
 def main():

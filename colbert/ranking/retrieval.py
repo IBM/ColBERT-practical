@@ -49,7 +49,7 @@ def retrieve(args):
                     torch.cuda.synchronize()
                 milliseconds += (time.time() - s) * 1000.0
 
-                if len(pids) & False: # TODO: temp get around, to add an option
+                if len(pids) > 0 & args.log_every_query:
                     print(qoffset+query_idx, q, len(scores), len(pids), scores[0], pids[0],
                           milliseconds / (qoffset+query_idx+1), 'ms')
 
