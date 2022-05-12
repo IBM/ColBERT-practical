@@ -1,7 +1,3 @@
-# import os
-# import sys
-# import git
-# import ujson
 import random
 from collections import defaultdict
 
@@ -11,9 +7,21 @@ from argparse import ArgumentParser
 MAX_NUM_TRIPLES = 40_000_000
 
 
-def sample_for_query_1(qid, ranking, positives, depth_negative, max_n_neg, min_n_neg):
+def sample_for_query_1(
+        qid,
+        ranking,
+        positives,
+        depth_negative,
+        max_n_neg,
+        min_n_neg,
+):
     """
-        Requires that the ranks are sorted per qid.
+        ranking: sorted tuples of (pid, rank, *_) as returned ranked list of passages.
+        positives: a list of positive (golden) passage ids.
+
+        From the top passages (`ranking`), choose the hard negatives before the positive and before `depth_negative`.
+        If there are fewer than `min_n_negative` ones before the positive, continue getting negatives.
+        If there are more than `max_n_neg` hard negatives, sample down.
     """
     negatives, triples = [], []
     found_positive = False
@@ -22,16 +30,16 @@ def sample_for_query_1(qid, ranking, positives, depth_negative, max_n_neg, min_n
     for pid, rank, *_ in ranking:
         assert rank >= 1, f"ranks should start at 1 \t\t got rank = {rank}"
         # stop if we ever see a positive because we only want to include super hard negatives
+        if found_positive and len(negatives) >= min_n_neg:
+            break
         if pid in positives:
             found_positive = True
             if rank == 1:
                 n_match += 1
             continue
         if rank > depth_negative:
-            # continue instead of break because we want to report n_match
+            # continue instead of break because we want to report n_match regardless of depth_negative
             continue
-        if found_positive and len(negatives) >= min_n_neg:
-            break
         negatives.append(pid)
 
     if len(negatives) > max_n_neg:
@@ -53,7 +61,14 @@ def sample_for_query_2(
         min_n_neg,
 ):
     """
-        Requires that the ranks are sorted per qid.
+        ranking: sorted tuples of (pid, rank, *_) as returned ranked list of passages.
+        positives: a list of positive (golden) passage ids.
+
+        From the top passages (`ranking`), choose the negatives before `depth_negative`, including:
+        1) The negatives before the positive are considered "hard" ones.
+        - If there are more than `n_neg_hard` hard negatives, sample down.
+        2) Also include the easy negatives after the positive but before "depth_easy_negative".
+        - If there are more than `n_needed` negatives, sample down the easy negatives.
     """
     triples = []
     found_positive = False
@@ -162,7 +177,6 @@ def get_self_guided_training_w_gold(args):
         for qid, pos, neg in triples:
             f.write(f'{qid}\t{pos}\t{neg}\n')
 
-    # print('\n\n', args, '\n\n')
     print(args.output)
     ratio_match = n_match / len(qid2rankings)
     print(f'match@1 = {ratio_match}')
@@ -180,6 +194,7 @@ def main():
     parser.add_argument('--output', dest='output', required=True, type=str)
     parser.add_argument('--sample_strategy', dest='sample_strategy', required=False, default='s1', type=str)
     parser.add_argument('--depth-', dest='depth_negative', required=True, type=int)
+    parser.add_argument('--depth-e', dest='depth_easy_negative', required=False, type=int, default=50)
     parser.add_argument('--max_n_neg', dest='max_n_neg', required=False, default=100, type=int)
     parser.add_argument('--min_n_neg', dest='min_n_neg', required=False, default=3, type=int)
 

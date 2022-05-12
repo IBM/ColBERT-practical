@@ -1,8 +1,10 @@
 # Notes for IBM repository
 
+This repository provides the Pytorch source code for NAACL 2022 industry track paper "Fast and Light-weight Answer Text Retrieval in Dialogue Systems" by Hui Wan, Siva Sankalp Patel, J William Murdock, Saloni Potdar, Sachindra Joshi.
+
 This repository is built on https://github.com/stanford-futuredata/ColBERT. 
 
-### Highlights of code changes:
+### Highlights of new code and code changes:
 
 * Flexible accommodation for various transformer models.
   * Scope: automated support for various types of transformers without extra files added in code.
@@ -13,8 +15,10 @@ This repository is built on https://github.com/stanford-futuredata/ColBERT.
     * Fixed training loop logic and data loader/batcher.     
     * Flexible shuffling when needed (e.g., each epoch).    
     * Training and checkpoint saving by epochs or fraction of epochs. 
-  * Without this, training would be on fixed set, and by steps, manual computation would be needed to get number of steps based on data size and hyper-parameters.
-  * Essential for production where we need training for multiple epochs.
+  * Before this, training would be on fixed set, and by steps, manual computation would be needed to get number of steps based on data size and hyper-parameters.
+  * Essential for real-world use cases, especially on datasets where we need training for multiple epochs.
+
+* Code for iterative training and asynchronous training in `ColBERT/asyn/`.
 
 * Extend to working on CPU.
   * Essential for production.
@@ -24,7 +28,7 @@ This repository is built on https://github.com/stanford-futuredata/ColBERT.
 
 ---------------
 
-The README below is also adapted to reflect the above mentioned changes.
+The README below was from the original repo, and was adapted to reflect the above mentioned changes.
 
 # ColBERT
 

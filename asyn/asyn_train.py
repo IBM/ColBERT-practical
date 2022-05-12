@@ -1,10 +1,3 @@
-import os
-import random
-import torch
-import copy
-
-import colbert.utils.distributed as distributed
-
 from colbert.utils.parser import Arguments
 from colbert.utils.runs import Run
 from asyn.asyn_training import train
