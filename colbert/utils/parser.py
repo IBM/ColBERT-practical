@@ -35,6 +35,7 @@ class Arguments():
         # NOTE: Providing a checkpoint is one thing, --resume is another, --resume_optimizer is yet another.
         self.add_argument('--resume', dest='resume', default=False, action='store_true')
         self.add_argument('--resume_optimizer', dest='resume_optimizer', default=False, action='store_true')
+        self.add_argument('--do_not_save_optimizer', dest='do_not_save_optimizer', default=False, action='store_true')
         self.add_argument('--checkpoint', dest='checkpoint', default=None, required=False)
         self.add_argument('--pretrained_model', dest='pretrained_model', default=None, required=False)
 
